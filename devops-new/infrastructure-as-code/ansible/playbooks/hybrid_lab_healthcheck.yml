@@ -1,0 +1,36 @@
+---
+- name: Multi-OS Lab Healthcheck
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Dynamically fetch credentials from Vault
+      ansible.builtin.include_vars:
+        file: ../vars/vault_lookup.yml
+
+    # --- WEB HEARTBEAT ---
+    - name: Check Web Service (Linux)
+      when: ansible_facts['os_family'] != "Windows"
+      ansible.builtin.uri:
+        url: "http://{{ ansible_host }}"
+        method: GET
+        status_code: [ 200, 301, 302 ]
+      register: web_linux
+
+    - name: Check Web Service (Windows)
+      when: ansible_facts['os_family'] == "Windows"
+      ansible.windows.win_uri:
+        url: "http://{{ ansible_host }}"
+        method: GET
+        status_code: 200
+      register: web_win
+
+    - name: Display Health Summary
+      ansible.builtin.debug:
+        msg:
+          - "System: {{ inventory_hostname }} ({{ ansible_facts['distribution']
+            }} {{ ansible_facts['distribution_version'] }})"
+          - "Web Status: {{ 'UP' if (web_linux.status | default(0) in [200, 301,
+            302]) or (web_win.status | default(0) == 200) else 'DOWN' }}"
+          - "Memory Free: {{ ansible_facts['memfree_mb'] if
+            ansible_facts['os_family'] != 'Windows' else 'Checked via WinRM' }}
+            MB"

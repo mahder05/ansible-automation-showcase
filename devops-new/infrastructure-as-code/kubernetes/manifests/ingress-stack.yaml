@@ -1,0 +1,82 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-ingress
+  namespace: argocd
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  ingressClassName: traefik  # <--- ADD THIS LINE TO ALL THREE INGRESSES
+  rules:
+  - host: argocd.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: argocd-server
+            port:
+              number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: devops-lab-ingress
+  namespace: awx-mastery
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  ingressClassName: traefik  # <--- ADD THIS LINE
+  rules:
+  - host: awx.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: awx-dev-service
+            port:
+              number: 80
+  - host: vault.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: vault
+            port:
+              number: 8200
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: monitoring-stack-ingress
+  namespace: monitoring
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  ingressClassName: traefik  # <--- ADD THIS LINE
+  rules:
+  - host: grafana.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus-grafana
+            port:
+              number: 80
+  - host: prometheus.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus-monitoring-kube-prometheus-prometheus
+            port:
+              number: 9090
