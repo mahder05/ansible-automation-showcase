@@ -1,4 +1,4 @@
-name: Platform CI
+name: Platform CI/CD
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
   pull_request:
 
 jobs:
-  ansible-lint:
-    name: Lint Ansible Code
+  pipeline:
+    name: Build, Test, and Deploy
     runs-on: portfolio-runner
 
     steps:
@@ -25,7 +25,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install ansible ansible-lint
 
-      - name: Run Ansible Lint
+      - name: Run Ansible Lint (CI Phase)
         run: |
-          # We tell the linter to scan our playbooks directory
           ansible-lint ansible/playbooks/test-connection.yml
+
+      - name: Trigger AWX Deployment (CD Phase)
+        run: |
+          echo "Triggering AWX Job Template 9 internally..."
+          curl -s -X POST \
+            -H "Authorization: Bearer ${{ secrets.AWX_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            http://awx-service.awx.svc.cluster.local/api/v2/job_templates/9/launch/ \
+            -d '{}'
