@@ -1,185 +1,39 @@
-# 🚀 Platform Engineering Portfolio
+# 🚀 Platform Engineering & GitOps Portfolio
 
-> **A comprehensive portfolio showcasing my journey, hands-on projects, automation, Infrastructure as Code, cloud engineering, and platform engineering practices.**
+![Ansible](https://img.shields.io/badge/Ansible-AWX-EE0000?style=for-the-badge&logo=ansible&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-Minikube-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)
+![Terraform](https://img.shields.io/badge/Terraform-IaC-7B42BC?style=for-the-badge&logo=terraform&logoColor=white)
+![GitOps](https://img.shields.io/badge/GitOps-GitHub-181717?style=for-the-badge&logo=github&logoColor=white)
 
----
+## 📌 Overview
+This repository serves as the central **Control Plane** for an enterprise-grade Platform Engineering and GitOps workflow. It demonstrates a unified approach to Infrastructure as Code (IaC), Configuration Management, and Container Orchestration. 
 
-## 👋 About Me
-
-I'm an Infrastructure & Automation Engineer with 15+ years of IT experience, passionate about building scalable, automated, and reliable platforms.
-
-This repository serves as my:
-
-- 📚 Learning Hub
-- 🧪 Engineering Lab
-- 💼 Technical Portfolio
-- 📝 Knowledge Base
+By leveraging **AWX (Ansible Automation Platform)** running on **Kubernetes**, this architecture allows for zero-touch provisioning, immutable infrastructure, and automated lifecycle management.
 
 ---
 
-# 🎯 Objective
-
-To continuously learn, build, document, and share real-world Platform Engineering solutions using industry best practices.
-
----
-
-# 🛠️ Technology Stack
-
-## Operating Systems
-
-- Linux
-- Windows
-- macOS
-
-## Programming
-
-- Python
-- Bash
-- YAML
-
-## Infrastructure as Code
-
-- Terraform
-- Ansible
-
-## Containers
-
-- Docker
-- Kubernetes
-
-## Cloud
-
-- AWS
-
-## Version Control
-
-- Git
-- GitHub
-
-## CI/CD
-
-- GitHub Actions
-
-## Monitoring
-
-- Prometheus
-- Grafana
-
-## AI
-
-- Generative AI
-- AI for DevOps
-- AI Automation
+## 🏗️ Architecture & Tech Stack
+* **Configuration Management:** Ansible / AWX
+* **Infrastructure as Code (IaC):** Terraform
+* **Container Orchestration:** Kubernetes (Minikube / Helm)
+* **Source of Truth (GitOps):** GitHub
+* **Execution Environment:** Containerized Ansible Runner Pods (awx-ee)
 
 ---
 
-# 📂 Repository Structure
+## 📂 Enterprise Repository Structure
+This repository follows an industry-standard mono-repo structure, separating concerns across the infrastructure lifecycle:
 
-```
-platform-engineering-portfolio
-│
-├── 01-linux
-├── 02-python
-├── 03-git-github
-├── 04-ansible
-├── 05-terraform
-├── 06-docker
-├── 07-kubernetes
-├── 08-aws
-├── 09-github-actions
-├── 10-monitoring
-├── 11-ai
-├── 12-projects
-├── assets
-├── diagrams
-└── docs
-```
-
----
-
-# 📖 Learning Roadmap
-
-- [ ] Linux
-- [ ] Git & GitHub
-- [ ] Python
-- [ ] Bash Scripting
-- [ ] Networking
-- [ ] Ansible
-- [ ] Terraform
-- [ ] Docker
-- [ ] Kubernetes
-- [ ] AWS
-- [ ] GitHub Actions
-- [ ] Monitoring
-- [ ] Platform Engineering
-- [ ] AI for Infrastructure
-
----
-
-# 💼 Featured Projects
-
-| Project | Description | Status |
-|----------|-------------|--------|
-| Infrastructure Automation | Ansible Playbooks | 🚧 |
-| Terraform Labs | AWS Infrastructure | 🚧 |
-| Docker Labs | Containers | 🚧 |
-| Kubernetes Labs | Cluster Management | 🚧 |
-| Python Automation | Infrastructure Automation | 🚧 |
-
----
-
-# 📚 Certifications
-
-Coming Soon...
-
----
-
-# 📄 Resume
-
-Resume will be added here.
-
----
-
-# 🎯 Current Focus
-
-- Platform Engineering
-- Python Automation
-- Infrastructure as Code
-- Cloud Automation
-- AI-assisted Engineering
-
----
-
-# 🤝 Connect With Me
-
-GitHub:
-> https://github.com/mahder05
-
-LinkedIn:
-> Coming Soon
-
----
-
-# ⭐ Repository Goals
-
-This repository is built to:
-
-- Document my engineering journey
-- Showcase practical projects
-- Demonstrate automation skills
-- Share reusable code
-- Maintain technical notes
-- Prepare for technical interviews
-- Showcase my work to recruiters and hiring managers
-
----
-
-## 📌 Note
-
-This repository is continuously evolving as I learn, build, and improve my Platform Engineering skills.
-
-If you find something useful, feel free to explore and learn along with me.
-
----
-
-**Happy Learning! 🚀**
+```text
+.
+├── ansible/
+│   ├── inventory/         # Dynamic and static inventory definitions
+│   ├── playbooks/         # Core automation and configuration playbooks
+│   └── roles/             # Modular, reusable Ansible roles
+├── kubernetes/
+│   └── manifests/         # K8s deployments, services, and GitOps state files
+├── terraform/
+│   ├── environments/      # State isolation for Dev, Staging, and Prod
+│   └── modules/           # Reusable Terraform resource modules
+└── .github/
+    └── workflows/         # CI/CD pipelines for linting and deployment
