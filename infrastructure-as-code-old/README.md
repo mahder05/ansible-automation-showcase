@@ -1,4 +1,4 @@
-# 🚀 DevOps Mastery Lab
+# 🚀 Infrastructure as Code (DevOps Practice)
 
 A local, production-grade DevOps environment powered by Kubernetes (k3s) and Colima, featuring a fully integrated CI/CD and Secrets Management stack. This repository contains the Infrastructure-as-Code (IaC) and automation scripts to deploy a complete DevOps ecosystem locally. It leverages Colima for the container runtime and k3d for a lightweight Kubernetes distribution.
 
