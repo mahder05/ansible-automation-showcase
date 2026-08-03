@@ -1,0 +1,9 @@
+---
+- name: Platform Engineering AWX Connection Test
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+    - name: Verify AWX Execution
+      ansible.builtin.debug:
+        msg: "Success! AWX has successfully pulled and executed code from the platform-engineering-portfolio."
