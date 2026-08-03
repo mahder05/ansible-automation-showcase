@@ -9,7 +9,7 @@ on:
 jobs:
   ansible-lint:
     name: Lint Ansible Code
-    runs-on: ubuntu-latest
+    runs-on: portfolio-runner
 
     steps:
       - name: Checkout Code
