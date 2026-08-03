@@ -6,4 +6,4 @@
   tasks:
     - name: Verify AWX Execution
       ansible.builtin.debug:
-        msg: "Success! AWX has successfully pulled and executed code from the platform-engineering-portfolio."
+        msg: "GitOps is live! GitHub Webhook automatically triggered this AWX job via ngrok."
