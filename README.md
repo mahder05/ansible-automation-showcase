@@ -14,7 +14,6 @@ This repository serves as my:
 - 🧪 Engineering Lab
 - 💼 Technical Portfolio
 - 📝 Knowledge Base
-- 🎯 Interview Preparation Repository
 
 ---
 
@@ -36,6 +35,7 @@ To continuously learn, build, document, and share real-world Platform Engineerin
 
 - Python
 - Bash
+- YAML
 
 ## Infrastructure as Code
 
@@ -90,7 +90,6 @@ platform-engineering-portfolio
 ├── 10-monitoring
 ├── 11-ai
 ├── 12-projects
-├── 13-interview-preparation
 ├── assets
 ├── diagrams
 └── docs
