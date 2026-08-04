@@ -27,7 +27,7 @@ jobs:
 
       - name: Run Ansible Lint (CI Phase)
         run: |
-          ansible-lint ansible/playbooks/test-connection.yml
+          ansible-lint ansible/playbooks/setup-nginx.yml
 
       - name: Trigger AWX Deployment (CD Phase)
         run: |

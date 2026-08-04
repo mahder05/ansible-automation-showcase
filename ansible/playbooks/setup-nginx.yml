@@ -1,0 +1,33 @@
+---
+- name: Configure NGINX Web Server
+  hosts: localhost
+  connection: local
+  gather_facts: true
+
+  vars:
+    server_name: "Mahder's GitOps Server"
+    environment_tier: "production"
+    deployer_name: "GitHub Actions + AWX"
+    dest_folder: "/tmp/nginx_config"
+
+  tasks:
+    - name: Ensure configuration directory exists
+      ansible.builtin.file:
+        path: "{{ dest_folder }}"
+        state: directory
+        mode: "0755"
+
+    - name: Generate NGINX index.html from Jinja2 template
+      ansible.builtin.template:
+        src: index.html.j2
+        dest: "{{ dest_folder }}/index.html"
+        mode: "0644"
+
+    - name: Verify generated file contents
+      ansible.builtin.command: cat "{{ dest_folder }}/index.html"
+      register: file_output
+      changed_when: false
+
+    - name: Display the rendered configuration
+      ansible.builtin.debug:
+        var: file_output.stdout_lines

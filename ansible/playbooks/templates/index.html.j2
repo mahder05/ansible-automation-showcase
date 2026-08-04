@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Platform Engineering Portfolio</title>
+</head>
+<body>
+    <h1>Welcome to {{ server_name }}!</h1>
+    <p>This web server was automatically configured by AWX via an air-gapped CI/CD pipeline.</p>
+    <p>Environment: <strong>{{ environment_tier | upper }}</strong></p>
+    <p>Deployed by: <strong>{{ deployer_name }}</strong></p>
+</body>
+</html>
