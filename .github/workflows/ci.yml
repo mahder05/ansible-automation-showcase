@@ -29,9 +29,19 @@ jobs:
         run: |
           ansible-lint ansible/playbooks/setup-nginx.yml
 
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Format & Validate (CI Phase)
+        run: |
+          cd terraform
+          terraform init -backend=false
+          terraform fmt -check
+          terraform validate
+
       - name: Trigger AWX Deployment (CD Phase)
         run: |
-          echo "Triggering AWX Job Template 9 internally..."
+          echo "Triggering AWX Job Template internally..."
           curl -s -X POST \
             -H "Authorization: Bearer ${{ secrets.AWX_TOKEN }}" \
             -H "Content-Type: application/json" \
