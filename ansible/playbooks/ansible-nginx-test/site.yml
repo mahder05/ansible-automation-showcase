@@ -1,6 +1,6 @@
 ---
 - name: Deploy Web Fleet via Roles
-  hosts: webservers
+  hosts: all
   become: true
   roles:
     - role: nginx
