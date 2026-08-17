@@ -1,0 +1,29 @@
+---
+- name: Deploy NGINX on RHEL 10
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Ensure Nginx is installed via DNF
+      ansible.builtin.dnf:
+        name: nginx
+        state: present
+
+    - name: Create a custom index.html
+      ansible.builtin.copy:
+        dest: /usr/share/nginx/html/index.html
+        content: "<h1>Hello from Ansible on RHEL 10!</h1>\n"
+        mode: "0644"
+
+    - name: Allow HTTP traffic in firewalld
+      ansible.posix.firewalld:
+        service: http
+        permanent: true
+        state: enabled
+        immediate: true
+
+    - name: Ensure Nginx is started and enabled on boot
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true

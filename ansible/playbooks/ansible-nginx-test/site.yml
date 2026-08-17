@@ -1,0 +1,8 @@
+---
+- name: Deploy Web Fleet via Roles
+  hosts: webservers
+  become: true
+  roles:
+    - role: nginx
+      vars:
+        custom_message: "Role Deployment Successful on RHEL 10!"

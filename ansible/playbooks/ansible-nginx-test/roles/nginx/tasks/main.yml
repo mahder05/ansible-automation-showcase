@@ -1,0 +1,27 @@
+---
+- name: Ensure Nginx is installed via DNF
+  ansible.builtin.dnf:
+    name: nginx
+    state: present
+
+- name: Deploy dynamic index.html template
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: /usr/share/nginx/html/index.html
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Nginx
+
+- name: Allow HTTP traffic in firewalld
+  ansible.posix.firewalld:
+    service: "{{ nginx_firewall_service }}"
+    permanent: true
+    state: enabled
+    immediate: true
+
+- name: Ensure Nginx is started and enabled on boot
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: true
