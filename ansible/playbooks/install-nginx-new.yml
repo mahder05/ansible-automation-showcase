@@ -1,0 +1,51 @@
+---
+- name: Deploy Nginx with Jinja2 Templating
+  hosts: webservers
+  become: true
+
+  vars:
+    http_port: 80
+    server_domain: "myapp.local"
+    doc_root: "/usr/share/nginx/app"
+
+  tasks:
+    - name: Ensure package cache is updated and Nginx is installed.
+      ansible.builtin.package:
+        name: nginx
+        state: present
+        update_cache: true
+      notify:
+        - Start Nginx
+
+    - name: Create document root directory
+      ansible.builtin.copy:
+        dest: "{{ doc_root }}/index.html"
+        content: "<h1> Welcome to {{ server_domain }}!</h1>"
+        mode: "0755"
+
+    - name: Deploy Nginx configuration using Jinja2 template
+      ansible.builtin.template:
+        src: webapp.conf.j2
+        dest: /etc/nginx/conf.d/{{ server_domain }}.conf
+        mode: "0644"
+      notify:
+        - Reload Nginx
+
+    - name: Ensure Nginx service is enabled and running
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+
+    - name: Permit HTTP traffic through the RHEL firewall
+      ansible.builtin.firewalld:
+        service: http
+        permanent: true
+        state: enabled
+        immediate: yes
+
+  handlers:
+    - name: Reload Nginx
+      ansible.builtin.service:
+        name: nginx
+        state: started
