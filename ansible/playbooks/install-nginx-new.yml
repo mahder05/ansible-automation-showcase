@@ -6,7 +6,7 @@
   vars:
     http_port: 80
     server_domain: "myapp.local"
-    doc_root: "/usr/share/nginx/app"
+    doc_root: "/usr/share/nginx/myapp"
 
   tasks:
     - name: Ensure package cache is updated and Nginx is installed.
