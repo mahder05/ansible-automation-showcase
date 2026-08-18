@@ -17,6 +17,12 @@
       notify:
         - Start Nginx
 
+    - name: Create the document root directory
+      ansible.builtin.file:
+        path: /usr/share/nginx/myapp
+        state: directory
+        mode: "0755"
+
     - name: Create document root directory
       ansible.builtin.copy:
         dest: "{{ doc_root }}/index.html"
