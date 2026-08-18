@@ -1,6 +1,6 @@
 ---
 - name: Deploy Nginx with Jinja2 Templating
-  hosts: webservers
+  hosts: all
   become: true
 
   vars:
