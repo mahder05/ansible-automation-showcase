@@ -1,0 +1,51 @@
+---
+- name: Enterprise Disk Space Monitoring and Alerting
+  hosts: all
+  gather_facts: yes
+  vars:
+    # Production best practice: Centralize thresholds in variables
+    disk_threshold_percent: 80
+
+  tasks:
+    - name: Analyze disk metrics from system facts
+      ansible.builtin.set_fact:
+        high_usage_disks: >-
+          {{
+            ansible_facts['mounts']
+            | selectattr('size_total', 'greaterthan', 0)
+
+            | map('modify', {'used_percent': ((item.size_total - item.size_available) / item.size_total * 100) | round(1)})
+            | selectattr('used_percent', 'greaterthan', disk_threshold_percent | float)
+            | list
+          }}
+      # Explaining Jinja2 filters in an interview shows advanced automation skills
+
+    - name: Log status to a central system report
+      ansible.builtin.lineinfile:
+        path: /var/log/disk_compliance_report.log
+        line: "{{ ansible_date_time.iso8601 }} - HOST: {{ inventory_hostname }} - Issues Found: {{ high_usage_disks | length }}"
+        create: yes
+        mode: "0644"
+      become: yes
+
+    - name: Block execution for alerting if disks violate compliance thresholds
+      block:
+        - name: Print clear warning details to control node console
+          ansible.builtin.debug:
+            msg:
+              - "CRITICAL: Storage threshold breached on {{ inventory_hostname }}!"
+              - "Offending Mounts: {{ high_usage_disks | map(attribute='mount') | list }}"
+
+        - name: Trigger external alert (Simulated via Local Slack/Email API call)
+          ansible.builtin.uri:
+            url: "https://monitoring.internal"
+            method: POST
+            body_format: json
+            body:
+              severity: "CRITICAL"
+              host: "{{ inventory_hostname }}"
+              details: "{{ high_usage_disks }}"
+            status_code: [200, 202]
+          ignore_errors: yes # Prevents a broken API from stopping the entire deployment pipeline
+
+      when: high_usage_disks | length > 0
