@@ -1,0 +1,33 @@
+---
+- name: Perform RHEL patch scan
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Scan for available packages and its updates
+      ansible.builtin.dnf:
+        list: updates
+      register: patch_scan
+
+    - name: Set patch count
+      ansible.builtin.set_fact:
+        patch_count: "{{ patch_scan.results | lenght }}"
+
+    - name: Report patch status
+      ansible.builtin.debug:
+        msg: >-
+          Host = {{ inventory_hostname }}
+          OS = {{ ansible_distribution }}
+          Version = {{ ansible_distribution_version }}
+          AvailableUpdates = {{ patch_count }}
+
+    - name: Report server requiring patches
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }} requires patching"
+      when: patch_count | int > 0
+
+    - name: Report fully updated server
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }} has no available package updates"
+      when: patch_count | int == 0
