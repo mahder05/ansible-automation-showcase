@@ -1,0 +1,18 @@
+---
+- name: Check application health
+  hosts: appservers
+
+  tasks:
+    - name: Check application status
+      app_health:
+        path: /opt/myapp/status
+      register: app_result
+
+    - name: Display application status
+      ansible.builtin.debug:
+        msg: "{{ app_result.message }}"
+
+    - name: Report unhealthy application
+      ansible.builtin.debug:
+        msg: "Application is unhealthy"
+      when: not app_result.healthy
