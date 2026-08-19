@@ -1,0 +1,34 @@
+- name: Manage Users on RHEL 10
+  hosts: all
+  become: true
+
+  vars:
+    users:
+      - name: mahesh
+        uid: 1007
+        group: developers
+
+      - name: supraja
+        uid: 1008
+        group: admins
+
+      - name: tanmayi
+        uid: 1010
+        group: observers
+        shell: /sbin/nologin
+
+  tasks:
+    - name: Ensure required group exists
+      ansible.builtin.group:
+        name: "{{ item.group }}"
+        state: present
+      loop: "{{ users }}"
+
+    - name: create users
+      ansible.builtin.users:
+        name: "{{ item.name }}"
+        uid: "{{ item.uid }}"
+        group: "{{ item.group }}"
+        shell: "{{ item.shell |default('/bin/bash') }}"
+        state: present
+      loop: "{{ users }}"
