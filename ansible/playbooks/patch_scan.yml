@@ -12,7 +12,7 @@
 
     - name: Set patch count
       ansible.builtin.set_fact:
-        patch_count: "{{ patch_scan.results | lenght }}"
+        patch_count: "{{ patch_scan.results | length }}"
 
     - name: Report patch status
       ansible.builtin.debug:
