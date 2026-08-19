@@ -25,7 +25,7 @@
       loop: "{{ users }}"
 
     - name: create users
-      ansible.builtin.users:
+      ansible.builtin.user:
         name: "{{ item.name }}"
         uid: "{{ item.uid }}"
         group: "{{ item.group }}"
