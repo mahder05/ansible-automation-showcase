@@ -5,4 +5,4 @@
   roles:
     - role: nginx
       vars:
-        custom_message: "Role Deployment Successful on RHEL 10!"
+        nginx_custom_message: "Role Deployment Successful on RHEL 10!"

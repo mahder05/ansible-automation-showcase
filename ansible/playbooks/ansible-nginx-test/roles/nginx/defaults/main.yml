@@ -1,4 +1,4 @@
 ---
 nginx_port: 80
 nginx_firewall_service: http
-custom_message: "Hello from Ansible Role on RHEL 10!"
+nginx_custom_message: "Hello from Ansible Role on RHEL 10!"

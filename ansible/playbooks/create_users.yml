@@ -24,11 +24,11 @@
         state: present
       loop: "{{ users }}"
 
-    - name: create users
+    - name: Create users
       ansible.builtin.user:
         name: "{{ item.name }}"
         uid: "{{ item.uid }}"
         group: "{{ item.group }}"
-        shell: "{{ item.shell |default('/bin/bash') }}"
+        shell: "{{ item.shell | default('/bin/bash') }}"
         state: present
       loop: "{{ users }}"

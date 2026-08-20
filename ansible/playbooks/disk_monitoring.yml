@@ -7,28 +7,38 @@
     disk_threshold_percent: 80
 
   tasks:
-    - name: Analyze disk metrics from system facts
+    - name: Initialize the list of disks above the usage threshold
       ansible.builtin.set_fact:
-        high_usage_disks: >-
-          {{
-            ansible_facts['mounts']
-            | selectattr('size_total', 'greaterthan', 0)
+        high_usage_disks: []
 
-            | map('modify', {'used_percent': ((item.size_total - item.size_available) / item.size_total * 100) | round(1)})
-            | selectattr('used_percent', 'greaterthan', disk_threshold_percent | float)
-            | list
-          }}
-      # Explaining Jinja2 filters in an interview shows advanced automation skills
+    - name: Record disks above the usage threshold
+      ansible.builtin.set_fact:
+        high_usage_disks: "{{ high_usage_disks + [disk_usage] }}"
+      vars:
+        disk_usage:
+          mount: "{{ item.mount }}"
+          used_percent: >-
+            {{
+              (((item.size_total - item.size_available) / item.size_total) * 100)
+              | round(1)
+            }}
+      loop: "{{ ansible_facts.mounts }}"
+      when:
+        - item.size_total > 0
+        - >-
+          (((item.size_total - item.size_available) / item.size_total) * 100)
+          > disk_threshold_percent
 
     - name: Log status to a central system report
       ansible.builtin.lineinfile:
         path: /var/log/disk_compliance_report.log
         line: "{{ ansible_date_time.iso8601 }} - HOST: {{ inventory_hostname }} - Issues Found: {{ high_usage_disks | length }}"
-        create: yes
+        create: true
         mode: "0644"
-      become: yes
+      become: true
 
     - name: Block execution for alerting if disks violate compliance thresholds
+      when: high_usage_disks | length > 0
       block:
         - name: Print clear warning details to control node console
           ansible.builtin.debug:
@@ -46,6 +56,5 @@
               host: "{{ inventory_hostname }}"
               details: "{{ high_usage_disks }}"
             status_code: [200, 202]
-          ignore_errors: yes # Prevents a broken API from stopping the entire deployment pipeline
-
-      when: high_usage_disks | length > 0
+          register: monitoring_alert
+          failed_when: false

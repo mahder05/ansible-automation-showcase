@@ -44,11 +44,11 @@
         enabled: true
 
     - name: Permit HTTP traffic through the RHEL firewall
-      ansible.builtin.firewalld:
+      ansible.posix.firewalld:
         service: http
         permanent: true
         state: enabled
-        immediate: yes
+        immediate: true
 
   handlers:
     - name: Reload Nginx
