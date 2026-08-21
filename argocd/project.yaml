@@ -6,7 +6,7 @@ metadata:
 spec:
   description: Restricted project for the automation portfolio workloads
   sourceRepos:
-    - https://github.com/mahder05/ansible-automation-showcase.git
+    - https://github.com/mderangula/ansible-automation-showcase.git
   destinations:
     - namespace: hello-world
       server: https://kubernetes.default.svc
