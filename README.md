@@ -1,38 +1,54 @@
-# Ansible Automation Portfolio
+# Ansible Automation Showcase
 
-> **Linux-powered GitOps pipelines:** Ansible playbooks orchestrated through GitHub Actions with self-hosted runners.
+This repository contains practical examples of infrastructure automation with
+Ansible, Kubernetes, Argo CD, Terraform, and GitHub Actions.
 
----
+## What is included
 
-## 📌 Overview
-This repository is a curated portfolio of automation projects showcasing:
-- **Ansible** for configuration management and orchestration
-- **Linux** as the foundation for automation workflows
-- **GitHub Actions CI/CD** for GitOps pipelines
-- **Self-hosted runners** for scalable, secure automation
+- Ansible playbooks and roles for Linux administration
+- An AWX deployment example
+- Kubernetes manifests for a sample application
+- An Argo CD project and application
+- Terraform and Docker lab examples
+- A GitHub Actions workflow for manifest validation and Argo CD deployment
 
-The goal is to demonstrate practical, production-ready automation patterns for recruiters, engineers, and DevOps enthusiasts.
+## Repository layout
 
----
+```text
+ansible/       Ansible inventory, playbooks, roles, and requirements
+argocd/        Argo CD project, application, and setup instructions
+gitops/        Kubernetes workloads managed by Argo CD
+terraform/     Terraform examples
+devops-labs/   Docker and AWX lab files
+```
 
-## ⚙️ Tech Stack
-- **Linux** (RHEL 10/UBUNTU 26.04)
-- **Ansible** (AWX, Playbooks, Roles, Collections)
-- **GitHub Actions** (CI/CD workflows, GitOps pipelines)
-- **Infrastructure as Code** (Terraform/Docker/Podman/Kubernetes) *(optional integrations)*
+## GitOps workflow
 
----
+Changes to `argocd/` or `gitops/` trigger the GitHub Actions workflow. Pull
+requests validate the manifests. Changes merged into `main` are synchronized
+through Argo CD, and the workflow displays deployment status, resource details,
+history, and recent application logs.
 
-## 🚀 CI/CD Workflow
-1. **Code Commit** → Push Ansible playbooks to GitHub  
-2. **GitHub Actions Trigger** → Workflow runs on self-hosted action runner  
-3. **Ansible Execution** → Playbooks configure infrastructure/services  
-4. **GitOps Validation** → Automated checks, linting, and deployment  
-5. **Reporting** → Logs and status updates via GitHub Actions UI  
+Before deployment, create a GitHub environment named `production` and configure
+the `ARGOCD_SERVER` and `ARGOCD_AUTH_TOKEN` secrets. Follow the bootstrap steps
+in [argocd/README.md](argocd/README.md).
 
+## Running Ansible locally
 
+Install the required collections:
 
----
+```bash
+ansible-galaxy collection install -r ansible/requirements.yml
+```
 
-📜 License
-MIT License – free to use, share, and adapt.
+Run a connectivity check:
+
+```bash
+ansible-playbook -i ansible/inventory.ini ansible/playbooks/test-connection.yml
+```
+
+Review the inventory and playbooks before running them against your own hosts.
+
+## License
+
+This project is available under the MIT License.
