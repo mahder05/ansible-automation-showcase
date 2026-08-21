@@ -1,18 +1,15 @@
-version: '3.8'
+name: devops-lab
 
 services:
-  # 1. Our Python Web Application
   web:
-    build: .                 # Tells Compose to build the Dockerfile in this directory
-    container_name: web-app
+    build:
+      context: .
     ports:
-      - "8080:8080"          # Maps your Mac's port 8080 to the container's port 8080
-    depends_on:
-      - cache                # Ensures the cache starts BEFORE the web app
-
-  # 2. A Redis Database
-  cache:
-    image: redis:alpine      # Pulls a lightweight, official Redis image from Docker Hub
-    container_name: redis-cache
-    ports:
-      - "6379:6379"
+      - "127.0.0.1:8080:8080"
+    init: true
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true

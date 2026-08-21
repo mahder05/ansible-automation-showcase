@@ -1,31 +1,26 @@
-terraform {
-  required_providers {
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "~> 2.0"
+provider "kubernetes" {
+  config_path    = pathexpand(var.kubeconfig_path)
+  config_context = var.kubeconfig_context
+}
+
+resource "kubernetes_namespace_v1" "portfolio" {
+  metadata {
+    name = var.namespace
+  }
+}
+
+resource "kubernetes_deployment_v1" "nginx" {
+  metadata {
+    name      = "nginx"
+    namespace = kubernetes_namespace_v1.portfolio.metadata[0].name
+    labels = {
+      app = "nginx"
     }
   }
-}
 
-provider "kubernetes" {
-  config_path    = "~/.kube/config"
-  config_context = "minikube"
-}
-
-resource "kubernetes_namespace" "portfolio" {
-  metadata {
-    name = "portfolio-apps"
-  }
-}
-
-# 1. Create a 2-Replica NGINX Deployment
-resource "kubernetes_deployment" "nginx" {
-  metadata {
-    name      = "nginx-deployment"
-    namespace = kubernetes_namespace.portfolio.metadata[0].name
-  }
   spec {
-    replicas = 2
+    replicas = var.replicas
+
     selector {
       match_labels = {
         app = "nginx"
@@ -37,12 +32,25 @@ resource "kubernetes_deployment" "nginx" {
           app = "nginx"
         }
       }
+
       spec {
         container {
-          image = "nginx:latest"
+          image = "nginx:1.28.0-alpine"
           name  = "nginx"
+
           port {
             container_port = 80
+          }
+
+          resources {
+            requests = {
+              cpu    = "50m"
+              memory = "64Mi"
+            }
+            limits = {
+              cpu    = "250m"
+              memory = "128Mi"
+            }
           }
         }
       }
@@ -50,12 +58,12 @@ resource "kubernetes_deployment" "nginx" {
   }
 }
 
-# 2. Expose it with a Kubernetes Service
-resource "kubernetes_service" "nginx_service" {
+resource "kubernetes_service_v1" "nginx" {
   metadata {
-    name      = "nginx-service"
-    namespace = kubernetes_namespace.portfolio.metadata[0].name
+    name      = "nginx"
+    namespace = kubernetes_namespace_v1.portfolio.metadata[0].name
   }
+
   spec {
     selector = {
       app = "nginx"
@@ -64,6 +72,7 @@ resource "kubernetes_service" "nginx_service" {
       port        = 80
       target_port = 80
     }
-    type = "NodePort"
+
+    type = "ClusterIP"
   }
 }

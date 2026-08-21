@@ -1,20 +1,23 @@
-# 1. Use an official, lightweight Python runtime as a parent image
-FROM python:3.9-slim
+FROM python:3.13-slim
 
-# 2. Set the working directory inside the container
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    HOME=/tmp
+
 WORKDIR /app
 
-# 3. Copy the requirements file into the container
-COPY requirements.txt .
-
-# 4. Install the Python dependencies
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 5. Copy the rest of the application code into the container
-COPY app.py .
+RUN useradd --create-home --uid 10001 appuser
 
-# 6. Expose the port the app runs on
+COPY --chown=appuser:appuser app.py ./
+
 EXPOSE 8080
 
-# 7. Define the command to run the application
-CMD ["python", "app.py"]
+USER appuser
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=2)"]
+
+CMD ["gunicorn", "--bind=0.0.0.0:8080", "--workers=2", "--threads=2", "--access-logfile=-", "--error-logfile=-", "app:app"]
