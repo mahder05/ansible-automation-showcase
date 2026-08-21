@@ -5,6 +5,19 @@ metadata:
   namespace: argocd
 spec:
   description: Restricted project for the automation portfolio workloads
+  roles:
+    - name: github-actions
+      description: Sync and observe hello-world from GitHub Actions
+      policies:
+        - >-
+          p, proj:portfolio:github-actions, applications, get,
+          portfolio/hello-world, allow
+        - >-
+          p, proj:portfolio:github-actions, applications, sync,
+          portfolio/hello-world, allow
+        - >-
+          p, proj:portfolio:github-actions, logs, get,
+          portfolio/hello-world, allow
   sourceRepos:
     - https://github.com/mderangula/ansible-automation-showcase.git
   destinations:

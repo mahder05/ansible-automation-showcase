@@ -27,6 +27,50 @@ Confirm that Argo CD registered the application:
 argocd app get hello-world
 ```
 
+## Create the least-privilege automation token
+
+The `portfolio` project declares a `github-actions` role that can only read,
+sync, and retrieve logs for `portfolio/hello-world`. Apply the project before
+creating its token:
+
+```bash
+kubectl apply -f argocd/project.yaml
+```
+
+Log in to Argo CD with an administrative account. For a local lab, use a
+temporary port-forward in one terminal:
+
+```bash
+kubectl -n argocd port-forward svc/argocd-server 8080:443
+```
+
+Then log in from another terminal:
+
+```bash
+argocd login localhost:8080 --username admin --insecure
+```
+
+Generate a project-role token with a finite lifetime and pipe it directly to
+the GitHub environment secret so it is not printed or stored in the repository:
+
+```bash
+argocd proj role create-token portfolio github-actions \
+  --id github-actions-$(date +%Y-%m) \
+  --expires-in 720h \
+  --token-only | \
+gh secret set ARGOCD_AUTH_TOKEN \
+  --env production \
+  --repo mderangula/ansible-automation-showcase
+```
+
+Rotate this 30-day token before it expires. After confirming the replacement
+works, list and remove the expired token from the project role:
+
+```bash
+argocd proj role list-tokens portfolio github-actions
+argocd proj role delete-token portfolio github-actions TOKEN_ID
+```
+
 ## GitHub environment configuration
 
 Create a GitHub environment named `production` and add these environment
@@ -42,11 +86,30 @@ Optional environment variable:
   certificate. Production should use a trusted certificate and leave this
   unset or `false`.
 
+Set the server without putting a credential in shell history:
+
+```bash
+printf '%s' 'argocd.example.com:443' | \
+gh secret set ARGOCD_SERVER \
+  --env production \
+  --repo mderangula/ansible-automation-showcase
+```
+
+Confirm that the names exist; GitHub will not display their values:
+
+```bash
+gh secret list \
+  --env production \
+  --repo mderangula/ansible-automation-showcase
+```
+
 The `GitOps Delivery` workflow validates changes on pull requests. On `main`,
 it synchronizes the exact commit, waits for a healthy application, and prints
 application status, deployment history, managed resources, and recent pod logs
 in the GitHub Actions run.
 
-For a private Argo CD endpoint, change the deploy job to an online ephemeral
-self-hosted runner with network access to Argo CD. Keep validation on the
-GitHub-hosted runner.
+GitHub-hosted runners cannot reach a workstation port-forward, Kubernetes
+`ClusterIP`, `.local` hostname, or private LAN address. Use an Argo CD endpoint
+with trusted public HTTPS, or change only the deploy job to an online,
+ephemeral self-hosted runner with network access to Argo CD. Keep manifest
+validation on the GitHub-hosted runner.

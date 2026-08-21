@@ -61,12 +61,18 @@ jobs:
     steps:
       - name: Check required Argo CD configuration
         run: |
+          invalid=false
           if [ -z "$ARGOCD_SERVER" ]; then
             echo "::error::Missing production environment secret ARGOCD_SERVER"
-            exit 1
+            invalid=true
           fi
           if [ -z "$ARGOCD_AUTH_TOKEN" ]; then
             echo "::error::Missing production environment secret ARGOCD_AUTH_TOKEN"
+            invalid=true
+          fi
+          if [ "$invalid" = "true" ]; then
+            echo "Configure the missing secrets in the GitHub production environment."
+            echo "See argocd/README.md for the token procedure."
             exit 1
           fi
 
@@ -109,7 +115,8 @@ jobs:
             --timeout 600
 
       - name: Publish Argo CD deployment evidence
-        if: always()
+        if: >-
+          always() && env.ARGOCD_SERVER != '' && env.ARGOCD_AUTH_TOKEN != ''
         run: |
           flags=(
             --server "$ARGOCD_SERVER"
