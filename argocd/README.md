@@ -109,7 +109,8 @@ application status, deployment history, managed resources, and recent pod logs
 in the GitHub Actions run.
 
 GitHub-hosted runners cannot reach a workstation port-forward, Kubernetes
-`ClusterIP`, `.local` hostname, or private LAN address. Use an Argo CD endpoint
-with trusted public HTTPS, or change only the deploy job to an online,
-ephemeral self-hosted runner with network access to Argo CD. Keep manifest
-validation on the GitHub-hosted runner.
+`ClusterIP`, `.local` hostname, or private LAN address. Manifest validation
+therefore remains on a GitHub-hosted runner, while the deployment job requires
+a macOS ARM64 self-hosted runner with the `argocd` and `orbstack` labels. The
+deployment job creates and cleans up its own local port-forward. Set
+`ARGOCD_SERVER` to `localhost:8080` for this lab topology.

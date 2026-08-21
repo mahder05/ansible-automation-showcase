@@ -25,6 +25,7 @@ concurrency:
 env:
   ARGOCD_APP: hello-world
   ARGOCD_CLI_VERSION: v3.4.2
+  ARGOCD_CLI_ASSET: argocd-darwin-arm64
 
 jobs:
   validate:
@@ -50,7 +51,7 @@ jobs:
     name: Sync and verify Argo CD
     if: github.event_name != 'pull_request'
     needs: validate
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64, argocd, orbstack]
     timeout-minutes: 20
     environment:
       name: production
@@ -76,18 +77,40 @@ jobs:
             exit 1
           fi
 
+      - name: Connect runner to the local Argo CD API
+        run: |
+          kubectl config use-context orbstack
+          kubectl -n argocd get service argocd-server
+          kubectl -n argocd port-forward \
+            service/argocd-server 8080:443 \
+            > "$RUNNER_TEMP/argocd-port-forward.log" 2>&1 &
+          echo "$!" > "$RUNNER_TEMP/argocd-port-forward.pid"
+
+          for attempt in {1..30}; do
+            if curl --insecure --silent --fail \
+              https://127.0.0.1:8080/healthz >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+
+          cat "$RUNNER_TEMP/argocd-port-forward.log"
+          echo "::error::Argo CD port-forward did not become ready"
+          exit 1
+
       - name: Install and verify Argo CD CLI
         run: |
           cd "$RUNNER_TEMP"
           curl --fail --silent --show-error --location \
-            --output argocd-linux-amd64 \
-            "https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_CLI_VERSION}/argocd-linux-amd64"
+            --output "$ARGOCD_CLI_ASSET" \
+            "https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_CLI_VERSION}/${ARGOCD_CLI_ASSET}"
           curl --fail --silent --show-error --location \
             --output cli_checksums.txt \
             "https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_CLI_VERSION}/cli_checksums.txt"
-          grep 'argocd-linux-amd64$' cli_checksums.txt > argocd.sha256
-          sha256sum --check argocd.sha256
-          chmod 0755 argocd-linux-amd64
+          grep " ${ARGOCD_CLI_ASSET}$" cli_checksums.txt > argocd.sha256
+          shasum --algorithm 256 --check argocd.sha256
+          mv "$ARGOCD_CLI_ASSET" argocd
+          chmod 0755 argocd
           echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
 
       - name: Sync the exact Git revision
@@ -101,13 +124,13 @@ jobs:
             flags+=(--insecure)
           fi
 
-          argocd-linux-amd64 app sync "$ARGOCD_APP" \
+          argocd app sync "$ARGOCD_APP" \
             "${flags[@]}" \
             --revision "$GITHUB_SHA" \
             --prune \
             --timeout 600
 
-          argocd-linux-amd64 app wait "$ARGOCD_APP" \
+          argocd app wait "$ARGOCD_APP" \
             "${flags[@]}" \
             --sync \
             --health \
@@ -128,12 +151,19 @@ jobs:
           fi
 
           echo "## Application status"
-          argocd-linux-amd64 app get "$ARGOCD_APP" "${flags[@]}" --show-operation || true
+          argocd app get "$ARGOCD_APP" "${flags[@]}" --show-operation || true
           echo "## Deployment history"
-          argocd-linux-amd64 app history "$ARGOCD_APP" "${flags[@]}" || true
+          argocd app history "$ARGOCD_APP" "${flags[@]}" || true
           echo "## Managed resources"
-          argocd-linux-amd64 app resources "$ARGOCD_APP" "${flags[@]}" || true
+          argocd app resources "$ARGOCD_APP" "${flags[@]}" || true
           echo "## Application pod logs (last 10 minutes)"
-          argocd-linux-amd64 app logs "$ARGOCD_APP" \
+          argocd app logs "$ARGOCD_APP" \
             "${flags[@]}" \
             --since-seconds 600 || true
+
+      - name: Stop the local Argo CD connection
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/argocd-port-forward.pid" ]; then
+            kill "$(cat "$RUNNER_TEMP/argocd-port-forward.pid")" || true
+          fi
