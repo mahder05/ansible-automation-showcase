@@ -17,8 +17,7 @@ are the one-time bootstrap layer; Argo CD manages the workload under
 Apply the project before the application:
 
 ```bash
-kubectl apply -f argocd/project.yaml
-kubectl apply -f argocd/hello-world-application.yaml
+kubectl apply -k argocd
 ```
 
 Confirm that Argo CD registered the application:
@@ -108,9 +107,10 @@ it synchronizes the tracked branch, waits for a healthy application, verifies
 that Argo CD deployed the triggering commit SHA, and prints application status,
 deployment history, managed resources, and recent pod logs in the Actions run.
 
-GitHub-hosted runners cannot reach a workstation port-forward, Kubernetes
-`ClusterIP`, `.local` hostname, or private LAN address. Manifest validation
-therefore remains on a GitHub-hosted runner, while the deployment job requires
-a macOS ARM64 self-hosted runner with the `argocd` and `orbstack` labels. The
-deployment job creates and cleans up its own local port-forward. Set
-`ARGOCD_SERVER` to `localhost:8080` for this lab topology.
+GitHub-hosted runners cannot reach OrbStack's private network. Manifest
+validation therefore remains on a GitHub-hosted runner, while the deployment
+job requires a macOS ARM64 self-hosted runner with the `argocd` and `orbstack`
+labels. The `argocd-server` service uses OrbStack's persistent `LoadBalancer`
+exposure, matching the local AWX access pattern and avoiding a long-running
+`kubectl port-forward` process. It listens on dedicated HTTPS port `8443` to
+avoid colliding with AWX's local port 80 exposure.

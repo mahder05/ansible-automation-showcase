@@ -77,26 +77,12 @@ jobs:
             exit 1
           fi
 
-      - name: Connect runner to the local Argo CD API
+      - name: Verify access to the Argo CD API
         run: |
           kubectl config use-context orbstack
           kubectl -n argocd get service argocd-server
-          kubectl -n argocd port-forward \
-            service/argocd-server 8080:443 \
-            > "$RUNNER_TEMP/argocd-port-forward.log" 2>&1 &
-          echo "$!" > "$RUNNER_TEMP/argocd-port-forward.pid"
-
-          for attempt in {1..30}; do
-            if curl --insecure --silent --fail \
-              https://127.0.0.1:8080/healthz >/dev/null; then
-              exit 0
-            fi
-            sleep 1
-          done
-
-          cat "$RUNNER_TEMP/argocd-port-forward.log"
-          echo "::error::Argo CD port-forward did not become ready"
-          exit 1
+          curl --insecure --silent --show-error --fail \
+            "https://${ARGOCD_SERVER}/healthz" >/dev/null
 
       - name: Install and verify Argo CD CLI
         run: |
@@ -171,10 +157,3 @@ jobs:
           argocd app logs "$ARGOCD_APP" \
             "${flags[@]}" \
             --since-seconds 600 || true
-
-      - name: Stop the local Argo CD connection
-        if: always()
-        run: |
-          if [ -f "$RUNNER_TEMP/argocd-port-forward.pid" ]; then
-            kill "$(cat "$RUNNER_TEMP/argocd-port-forward.pid")" || true
-          fi

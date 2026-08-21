@@ -89,11 +89,10 @@ AWX in a production environment.
 
 ## Argo CD and GitHub Actions
 
-Bootstrap the Argo CD project before its application:
+Bootstrap the persistent server service, project, and application:
 
 ```bash
-kubectl apply -f argocd/project.yaml
-kubectl apply -f argocd/hello-world-application.yaml
+kubectl apply -k argocd
 argocd app get hello-world
 ```
 
