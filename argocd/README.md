@@ -104,9 +104,9 @@ gh secret list \
 ```
 
 The `GitOps Delivery` workflow validates changes on pull requests. On `main`,
-it synchronizes the exact commit, waits for a healthy application, and prints
-application status, deployment history, managed resources, and recent pod logs
-in the GitHub Actions run.
+it synchronizes the tracked branch, waits for a healthy application, verifies
+that Argo CD deployed the triggering commit SHA, and prints application status,
+deployment history, managed resources, and recent pod logs in the Actions run.
 
 GitHub-hosted runners cannot reach a workstation port-forward, Kubernetes
 `ClusterIP`, `.local` hostname, or private LAN address. Manifest validation

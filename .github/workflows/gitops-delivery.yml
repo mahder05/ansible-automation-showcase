@@ -113,7 +113,7 @@ jobs:
           chmod 0755 argocd
           echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
 
-      - name: Sync the exact Git revision
+      - name: Sync main and verify the exact Git revision
         run: |
           flags=(
             --server "$ARGOCD_SERVER"
@@ -126,7 +126,7 @@ jobs:
 
           argocd app sync "$ARGOCD_APP" \
             "${flags[@]}" \
-            --revision "$GITHUB_SHA" \
+            --revision main \
             --prune \
             --timeout 600
 
@@ -136,6 +136,17 @@ jobs:
             --health \
             --operation \
             --timeout 600
+
+          deployed_revision="$(
+            argocd app get "$ARGOCD_APP" \
+              "${flags[@]}" \
+              --output json | jq --raw-output '.status.sync.revision'
+          )"
+          if [ "$deployed_revision" != "$GITHUB_SHA" ]; then
+            echo "::error::Expected $GITHUB_SHA but Argo CD deployed $deployed_revision"
+            exit 1
+          fi
+          echo "Verified deployed revision: $deployed_revision"
 
       - name: Publish Argo CD deployment evidence
         if: >-
