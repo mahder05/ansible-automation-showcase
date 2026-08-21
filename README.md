@@ -11,7 +11,6 @@ argocd/        Argo CD project, application, and bootstrap instructions
 gitops/        Kubernetes manifests managed by Argo CD
 terraform/     Configurable NGINX deployment for a Kubernetes lab cluster
 devops-labs/   Container and AWX deployment labs
-output/pdf/    Complete reference and learning guide
 ```
 
 ## Prerequisites
@@ -106,12 +105,6 @@ Create a GitHub environment named `production` with these secrets:
 - `ARGOCD_AUTH_TOKEN`
 
 See [argocd/README.md](argocd/README.md) for bootstrap and networking details.
-
-## Learning guide
-
-The complete setup, architecture, operations, troubleshooting, security notes,
-and exercises are available in the
-[PDF learning guide](output/pdf/ansible-automation-showcase-learning-guide.pdf).
 
 ## Important local-file safety
 
