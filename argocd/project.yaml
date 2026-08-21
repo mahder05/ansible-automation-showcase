@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: portfolio
+  namespace: argocd
+spec:
+  description: Restricted project for the automation portfolio workloads
+  sourceRepos:
+    - https://github.com/mahder05/ansible-automation-showcase.git
+  destinations:
+    - namespace: hello-world
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  namespaceResourceWhitelist:
+    - group: apps
+      kind: Deployment
+    - group: ""
+      kind: Service
+  orphanedResources:
+    warn: true

@@ -1,0 +1,132 @@
+name: GitOps Delivery
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "argocd/**"
+      - "gitops/**"
+      - ".github/workflows/gitops-delivery.yml"
+  push:
+    branches: [main]
+    paths:
+      - "argocd/**"
+      - "gitops/**"
+      - ".github/workflows/gitops-delivery.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gitops-production
+  cancel-in-progress: false
+
+env:
+  ARGOCD_APP: hello-world
+  ARGOCD_CLI_VERSION: v3.4.2
+
+jobs:
+  validate:
+    name: Validate Kubernetes manifests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Validate manifests with kubeconform
+        run: |
+          docker run --rm \
+            --volume "$PWD:/workspace:ro" \
+            ghcr.io/yannh/kubeconform:v0.8.0-alpine@sha256:461fae0fa54c5fe64028152533e57f6b88adb1d26dbafd80092e7310d349ae48 \
+            -strict \
+            -summary \
+            -ignore-missing-schemas \
+            /workspace/gitops \
+            /workspace/argocd
+
+  deploy:
+    name: Sync and verify Argo CD
+    if: github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+    env:
+      ARGOCD_SERVER: ${{ secrets.ARGOCD_SERVER }}
+      ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_AUTH_TOKEN }}
+      ARGOCD_INSECURE: ${{ vars.ARGOCD_INSECURE || 'false' }}
+    steps:
+      - name: Check required Argo CD configuration
+        run: |
+          if [ -z "$ARGOCD_SERVER" ]; then
+            echo "::error::Missing production environment secret ARGOCD_SERVER"
+            exit 1
+          fi
+          if [ -z "$ARGOCD_AUTH_TOKEN" ]; then
+            echo "::error::Missing production environment secret ARGOCD_AUTH_TOKEN"
+            exit 1
+          fi
+
+      - name: Install and verify Argo CD CLI
+        run: |
+          cd "$RUNNER_TEMP"
+          curl --fail --silent --show-error --location \
+            --output argocd-linux-amd64 \
+            "https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_CLI_VERSION}/argocd-linux-amd64"
+          curl --fail --silent --show-error --location \
+            --output cli_checksums.txt \
+            "https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_CLI_VERSION}/cli_checksums.txt"
+          grep 'argocd-linux-amd64$' cli_checksums.txt > argocd.sha256
+          sha256sum --check argocd.sha256
+          chmod 0755 argocd-linux-amd64
+          echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+
+      - name: Sync the exact Git revision
+        run: |
+          flags=(
+            --server "$ARGOCD_SERVER"
+            --auth-token "$ARGOCD_AUTH_TOKEN"
+            --grpc-web
+          )
+          if [ "$ARGOCD_INSECURE" = "true" ]; then
+            flags+=(--insecure)
+          fi
+
+          argocd-linux-amd64 app sync "$ARGOCD_APP" \
+            "${flags[@]}" \
+            --revision "$GITHUB_SHA" \
+            --prune \
+            --timeout 600
+
+          argocd-linux-amd64 app wait "$ARGOCD_APP" \
+            "${flags[@]}" \
+            --sync \
+            --health \
+            --operation \
+            --timeout 600
+
+      - name: Publish Argo CD deployment evidence
+        if: always()
+        run: |
+          flags=(
+            --server "$ARGOCD_SERVER"
+            --auth-token "$ARGOCD_AUTH_TOKEN"
+            --grpc-web
+          )
+          if [ "$ARGOCD_INSECURE" = "true" ]; then
+            flags+=(--insecure)
+          fi
+
+          echo "## Application status"
+          argocd-linux-amd64 app get "$ARGOCD_APP" "${flags[@]}" --show-operation || true
+          echo "## Deployment history"
+          argocd-linux-amd64 app history "$ARGOCD_APP" "${flags[@]}" || true
+          echo "## Managed resources"
+          argocd-linux-amd64 app resources "$ARGOCD_APP" "${flags[@]}" || true
+          echo "## Application pod logs (last 10 minutes)"
+          argocd-linux-amd64 app logs "$ARGOCD_APP" \
+            "${flags[@]}" \
+            --since-seconds 600 || true
